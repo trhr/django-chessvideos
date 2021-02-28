@@ -1,0 +1,19 @@
+
+[Event "TestTest Steel"]
+[Site "Wijk aan Zee NED"]
+[Date "2021.01.16"]
+[EventDate "2021.01.15"]
+[Round "1"]
+[Result "1/2-1/2"]
+[White "SlamboJackson"]
+[Black "JackSlambo"]
+[ECO "B90"]
+[WhiteElo "2732"]
+[BlackElo "2784"]
+[PlyCount "127"]
+
+1. e4 c5 2. Nf3 d6 3. d4 cxd4 4. Nxd4 Nf6 5. Nc3 a6 6. Be3 e5
+7. Nf3 Be7 8. Bc4 O-O 9. O-O Be6 10. Bb3 b5 11. Re1 Qc7
+12. Nh4 1/2-1/2
+
+        

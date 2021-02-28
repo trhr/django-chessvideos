@@ -1,0 +1,125 @@
+from django.test import TestCase
+from django.core.files.uploadedfile import SimpleUploadedFile
+from players.models import Player
+from games import utils
+from games.models import ChessGame
+import chess, chess.pgn
+# Create your tests here.
+import pathlib
+
+class GameImportTestCase(TestCase):
+    def tearDown(self):
+        utils.cleanup()
+
+    def setUp(self):
+        Player.objects.create(name="SlamboJackson", photo="DaniilDubov.jpg")
+        Player.objects.create(name="JackSlambo", photo="HikaruNakamura.jpg")
+        actual_test_file = """
+[Event "TestTest Steel"]
+[Site "Wijk aan Zee NED"]
+[Date "2021.01.16"]
+[EventDate "2021.01.15"]
+[Round "1"]
+[Result "1/2-1/2"]
+[White "SlamboJackson"]
+[Black "JackSlambo"]
+[ECO "B90"]
+[WhiteElo "2732"]
+[BlackElo "2784"]
+[PlyCount "127"]
+
+1. e4 c5 2. Nf3 d6 3. d4 cxd4 4. Nxd4 Nf6 5. Nc3 a6 6. Be3 e5
+7. Nf3 Be7 8. Bc4 O-O 9. O-O Be6 10. Bb3 b5 11. Re1 Qc7
+12. Nh4 1/2-1/2
+
+        """
+        actual_test_file_multiple = """
+[Event "TestTest Steel"]
+[Site "Wijk aan Zee NED"]
+[Date "2021.01.16"]
+[EventDate "2021.01.15"]
+[Round "1"]
+[Result "1/2-1/2"]
+[White "SlamboJackson"]
+[Black "JackSlambo"]
+[ECO "B90"]
+[WhiteElo "2732"]
+[BlackElo "2784"]
+[PlyCount "127"]
+
+1. e4 c5 2. Nf3 d6 3. d4 cxd4 4. Nxd4 Nf6 5. Nc3 a6 6. Be3 e5
+7. Nf3 Be7 8. Bc4 O-O 9. O-O Be6 10. Bb3 b5 11. Re1 Qc7
+12. Nh4 1/2-1/2
+
+[Event "TestTest Steel"]
+[Site "Wijk aan Zee NED"]
+[Date "2021.01.16"]
+[EventDate "2021.01.15"]
+[Round "1"]
+[Result "1/2-1/2"]
+[White "JackSlambo"]
+[Black "SlamboJackson"]
+[ECO "E10"]
+[WhiteElo "2705"]
+[BlackElo "2679"]
+[PlyCount "134"]
+
+1. d4 Nf6 2. c4 e6 3. Nf3 d5 4. g3 Bb4+ 5. Bd2 Be7 6. Bg2 Nbd7
+7. Qc2 c6 8. O-O b6 9. Rd1 Ba6 10. b3 O-O 11. a4 h6 12. a5 Qc8
+13. Na3 c5 14. Qb2 bxa5 15. Bxa5 Rb8 16. Qa2 dxc4 17. Nxc4 Bb7
+18. Rdc1 Bd5 19. Bd2 Ne4 20. Bf4 Rb7 21. Nfd2 Nxd2 22. Bxd5
+exd5 23. Nxd2 Qd8 24. Qa6 Qb6 25. Be3 Rfb8 26. Qd3 cxd4
+27. Bxd4 Bc5 28. Bxc5 Nxc5 29. Qxd5 Nxb3 30. Nxb3 Qxb3
+31. Qxb3 Rxb3 32. Rxa7 Rb1 33. Rxb1 Rxb1+ 34. Kg2 h5 35. Kf3
+g6 36. h4 Kg7 37. e4 Rb3+ 38. Kf4 Rb2 39. f3 Rb4 40. Ra5 Kf6
+41. g4 hxg4 42. Kxg4 Rb1 43. h5 Rg1+ 44. Kf4 gxh5 45. Rxh5 Ra1
+46. Rh6+ Kg7 47. Rd6 Ra3 48. e5 Ra4+ 49. Kf5 Ra3 50. f4 Ra5
+51. Kg5 Rb5 52. Rd7 Ra5 53. Kg4 Kf8 54. Kf5 Kg7 55. Ke4 Kf8
+56. f5 Ke8 57. Rc7 Ra1 58. Kf4 Rg1 59. Rb7 f6 60. Rb8+ Ke7
+61. Rb7+ Ke8 62. e6 Rf1+ 63. Ke4 Re1+ 64. Kd5 Rd1+ 65. Kc4
+Rc1+ 66. Kd3 Rd1+ 67. Kc4 Rc1+ 1/2-1/2
+            """
+        self.test_file = SimpleUploadedFile('test_pgn.pgn',
+                                            content=actual_test_file.encode(),
+                                            content_type='text/plain')
+
+        self.test_file_multiple = SimpleUploadedFile('test_pgn_multiple.pgn',
+                                                     content=actual_test_file_multiple.encode(),
+                                                     content_type='text/plain')
+
+    def test_uploaded_file(self):
+        file = utils.write_pgn_to_disk(self.test_file)
+        self.assertEqual(file, f'upload/{self.test_file}')
+
+    def test_file_to_pgn(self):
+        file = utils.write_pgn_to_disk(self.test_file)
+        games = utils.split_pgn(file)
+        game = utils.read_pgn_to_board(file, game_offset=games[0])
+        self.assertEqual(type(game), type(chess.pgn.Game()))
+        self.assertEqual(game.headers["Event"], "TestTest Steel")
+
+    def test_game_to_images(self):
+        file = utils.write_pgn_to_disk(self.test_file)
+        game = utils.read_pgn_to_board(file)
+        image_dir = utils.process_game_to_images(game)
+        self.assertEqual(image_dir, pathlib.Path('process/img'))
+
+    def test_handle_multiple_games(self):
+        file = utils.write_pgn_to_disk(self.test_file_multiple)
+        games = utils.split_pgn(file)
+        print(f'games: {games}')
+        self.assertEqual(len(games), 2)
+
+    def test_process_single_game(self):
+        video_filenames = utils.process_pgn(self.test_file)
+        self.assertEqual(len(video_filenames), 1)
+
+    def test_process_multiple_games(self):
+        video_filenames = utils.process_pgn(self.test_file_multiple)
+        self.assertEqual(len(video_filenames), 2)
+
+    def test_game_to_database(self):
+        utils.process_pgn(self.test_file_multiple)
+        games = ChessGame.objects.filter(event__exact="TestTest Steel")
+        self.assertEqual(games.first().video_file, "/media/ss/BACKUP/PycharmProjects/chessShortsDjango/process/TestTestSteel_2021.01.16_SlamboJackson_JackSlambo_1.mp4")
+        self.assertEqual(games.count(), 2)
