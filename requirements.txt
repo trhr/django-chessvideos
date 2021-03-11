@@ -23,7 +23,7 @@ colour==0.1.5
 command-not-found==0.3
 configparser==5.0.1
 constantly==15.1.0
-cryptography==2.8
+cryptography==3.3.2
 cssselect2==0.2.2
 cupshelpers==1.0
 cycler==0.10.0
