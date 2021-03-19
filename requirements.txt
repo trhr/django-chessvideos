@@ -75,7 +75,7 @@ olefile==0.46
 packaging==20.3
 pexpect==4.6.0
 pigar==0.10.0
-Pillow==7.1.0
+Pillow==8.1.1
 ply==3.11
 psutil==5.8.0
 pyasn1==0.4.2
