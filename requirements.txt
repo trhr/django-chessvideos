@@ -38,7 +38,7 @@ distro-info===0.23ubuntu1
 dnspython==1.16.0
 docutils==0.16
 entrypoints==0.3
-eventlet==0.30.1
+eventlet==0.31.0
 filelock==3.0.12
 greenlet==1.0.0
 html5lib==1.0.1
